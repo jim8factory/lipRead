@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>読唇ワープロ・五十音／濁点／半濁点対応</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Yu Gothic",Meiryo,sans-serif;color:#202733;background:#f4f7fb}
+*{box-sizing:border-box}body{margin:0}header{background:#183b5b;color:white;padding:18px 16px}
+h1{font-size:1.35rem;margin:0 0 6px}header p{margin:0;font-size:.94rem;line-height:1.5}
+main{max-width:1000px;margin:auto;padding:16px;display:grid;gap:16px}
+.panel{background:white;border:1px solid #d6e0e9;border-radius:14px;padding:15px;box-shadow:0 2px 8px #1020300b}
+h2{font-size:1.1rem;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.vowel{border:2px solid #c9d8e5;background:#fff;border-radius:12px;padding:8px 5px;cursor:pointer;color:#202733;min-width:0}
+.vowel[aria-pressed=true]{border-color:#1467a8;background:#eaf5ff;box-shadow:0 0 0 2px #1467a822}
+.vowel svg{display:block;width:100%;height:54px}.kana{font-size:1.25rem;font-weight:800}.desc{font-size:.78rem;color:#4b5d6e;line-height:1.3}
+textarea{width:100%;min-height:110px;border:1px solid #b9c8d5;border-radius:10px;padding:12px;font:1.15rem/1.6 inherit;resize:vertical}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+button.action{border:0;border-radius:9px;padding:10px 14px;font:inherit;font-weight:650;background:#1b5f91;color:white;cursor:pointer}
+button.secondary{background:#e7edf3;color:#203040}button:focus-visible,textarea:focus-visible{outline:3px solid #f3b53f;outline-offset:2px}
+#status{min-height:1.5em;color:#315d7e;margin-top:8px}.note{font-size:.9rem;line-height:1.6;color:#445466}
+.camera{display:grid;grid-template-columns:1fr;gap:10px}video{width:100%;max-height:340px;background:#101820;border-radius:10px;object-fit:cover;display:none}
+#flipbook{margin-top:14px;border:2px solid #c9d8e5;border-radius:14px;padding:12px;background:#f8fbff;text-align:center}
+#flipStage{min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}#flipStage svg{width:min(100%,240px);height:150px}#flipChar{font-size:2rem;font-weight:800}#flipMeta{font-size:.85rem;color:#526579}#flipRange{width:100%;margin-top:10px}
+.flip-card{width:100px;max-width:calc(33.333% - 6px);flex:1 0 86px;border:1px solid #c9d8e5;border-radius:10px;padding:6px;text-align:center;background:#fff}
+@media(min-width:680px){main{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}.grid{grid-template-columns:repeat(10,minmax(0,1fr))}.vowel svg{height:58px}}
+</style>
+</head>
+<body>
+<header><h1>読唇ワープロ・かな拡張版</h1><p>五十音・濁点・半濁点・拗音などを入力し、口形カードをパラパラ再生する試作アプリ</p></header>
+<main>
+<section class="panel wide">
+<h2>1. かな・濁点・半濁点から文字を選んで入力</h2>
+<div class="grid" id="vowels">
+<button class="vowel" data-char="あ" aria-pressed="false" aria-label="あ。口を縦に大きく開く"><svg viewBox="0 0 120 90" role="img" aria-label="縦に大きく開いた口"><path d="M22 30 Q60 5 98 30 Q92 78 60 83 Q28 78 22 30Z" fill="#9e3344" stroke="#252b32" stroke-width="4"/><path d="M29 32 Q60 20 91 32 Q83 47 60 49 Q37 47 29 32Z" fill="#fff1e8"/><path d="M34 49 Q60 40 86 49 Q80 70 60 74 Q40 70 34 49Z" fill="#e98d9b"/></svg><div class="kana">あ</div><div class="desc">縦に大きく開く</div></button>
+<button class="vowel" data-char="い" aria-pressed="false" aria-label="い。口角を横に引く"><svg viewBox="0 0 120 90" role="img" aria-label="横に広がった口"><path d="M12 40 Q30 23 60 34 Q90 23 108 40 Q90 65 60 61 Q30 65 12 40Z" fill="#a73c4c" stroke="#252b32" stroke-width="4"/><path d="M19 40 Q60 31 101 40 Q83 52 60 51 Q37 52 19 40Z" fill="#fff5eb"/><path d="M26 49 Q60 56 94 49" fill="none" stroke="#e98d9b" stroke-width="5" stroke-linecap="round"/></svg><div class="kana">い</div><div class="desc">横に広げる</div></button>
+<button class="vowel" data-char="う" aria-pressed="false" aria-label="う。唇をすぼめる"><svg viewBox="0 0 120 90" role="img" aria-label="小さくすぼめた口"><path d="M34 40 Q42 25 60 31 Q78 25 86 40 Q80 59 60 61 Q40 59 34 40Z" fill="#a73c4c" stroke="#252b32" stroke-width="4"/><ellipse cx="60" cy="43" rx="13" ry="9" fill="#40212b"/><path d="M48 51 Q60 56 72 51" fill="none" stroke="#e98d9b" stroke-width="4" stroke-linecap="round"/></svg><div class="kana">う</div><div class="desc">唇をすぼめる</div></button>
+<button class="vowel" data-char="え" aria-pressed="false" aria-label="え。横に開き、少し縦にも開く"><svg viewBox="0 0 120 90" role="img" aria-label="横に開き少し開いた口"><path d="M15 39 Q32 23 60 31 Q88 23 105 39 Q91 67 60 65 Q29 67 15 39Z" fill="#a73c4c" stroke="#252b32" stroke-width="4"/><path d="M23 39 Q60 29 97 39 L91 48 Q60 57 29 48Z" fill="#fff4e9"/><path d="M29 52 Q60 63 91 52 Q82 67 60 69 Q38 67 29 52Z" fill="#e98d9b"/></svg><div class="kana">え</div><div class="desc">横に開き少し縦にも</div></button>
+<button class="vowel" data-char="お" aria-pressed="false" aria-label="お。唇を丸めて縦長に開く"><svg viewBox="0 0 120 90" role="img" aria-label="丸く縦長に開いた口"><path d="M35 20 Q60 7 85 20 Q96 43 80 68 Q60 86 40 68 Q24 43 35 20Z" fill="#a73c4c" stroke="#252b32" stroke-width="4"/><ellipse cx="60" cy="44" rx="18" ry="26" fill="#40212b"/><path d="M47 63 Q60 70 73 63" fill="none" stroke="#e98d9b" stroke-width="5" stroke-linecap="round"/></svg><div class="kana">お</div><div class="desc">丸く縦長に開く</div></button>
+<button class="vowel" data-char="ん" aria-pressed="false" aria-label="ん。唇を閉じることがあるが、んの口形は前後の音で変わる"><svg viewBox="0 0 120 90" role="img" aria-label="唇を閉じた口"><path d="M20 43 Q40 30 60 39 Q80 30 100 43 Q82 57 60 51 Q38 57 20 43Z" fill="#a73c4c" stroke="#252b32" stroke-width="4"/><path d="M29 44 Q60 48 91 44" fill="none" stroke="#e98d9b" stroke-width="4" stroke-linecap="round"/></svg><div class="kana">ん</div><div class="desc">口形は前後の音で変化</div></button>
+</div>
+<p class="note">基本かな、濁点、半濁点、小さいかな、拗音を入力できます。口形図は母音を基にした簡略見本です。子音ごとの違いを正確に再現するものではありません。</p>
+</section>
+<section class="panel">
+<h2>2. 文章ワープロ</h2>
+<textarea id="text" aria-label="入力した文章" placeholder="上の口形ボタンを押すと文字が入ります。ここで直接編集もできます。"></textarea>
+<div class="actions"><button class="action" id="space">空白</button><button class="action secondary" id="back">1文字削除</button><button class="action secondary" id="clear">全消去</button><button class="action" id="speak">テキストを読み上げる</button><button class="action" id="arrange">口形画像を並べる</button></div>
+<div id="status" role="status" aria-live="polite">準備完了</div>
+<div id="sequence" aria-label="テキストに対応する口形画像" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"></div>
+<div id="flipbook" aria-label="口形のパラパラ漫画">
+  <h3 style="margin:0 0 8px">口形パラパラ漫画</h3>
+  <div id="flipStage"><div class="note">「口形画像を並べる」を押すと、ここで順番に再生できます。</div></div>
+  <div class="actions" style="justify-content:center"><button class="action" id="playFlip">▶ 再生</button><button class="action secondary" id="pauseFlip">一時停止</button><button class="action secondary" id="prevFlip">前へ</button><button class="action secondary" id="nextFlip">次へ</button><label style="display:flex;align-items:center;gap:6px">速度 <select id="flipSpeed" style="font:inherit;padding:6px;border-radius:8px"><option value="1000">遅い</option><option value="600" selected>普通</option><option value="300">速い</option></select></label></div>
+  <input id="flipRange" type="range" min="0" max="0" value="0" aria-label="コマを選択">
+  <div id="flipMeta" aria-live="polite">0 / 0 コマ</div>
+</div>
+<p class="note">拗音（例：きゃ、しゃ、ちゃ）はひとまとまりのコマとして表示します。口形図は母音を基にした簡略表示です。漢字や未対応文字は文字カードとして表示し、消さずに残します。実際の発話映像の解析ではありません。</p>
+</section>
+<section class="panel">
+<h2>3. カメラ確認（試作）</h2>
+<div class="camera"><video id="video" autoplay playsinline muted></video><div class="actions"><button class="action" id="start">カメラを起動</button><button class="action secondary" id="stop">停止</button></div></div>
+<p class="note">カメラ映像を表示する機能です。現在の版はAIによる自動読唇を行いません。6つの口形画像だけでは、連続した日本語の文章を自動判定できません。</p>
+</section>
+<section class="panel">
+<h2>4. 使い方</h2>
+<ol class="note"><li>口形の見本を確認します。</li><li>該当する文字を選ぶと、文章欄に追加されます。</li><li>文章欄はキーボードで修正できます。</li><li>「読み上げ」で入力文を音声確認できます（対応ブラウザのみ）。</li></ol>
+</section>
+</main>
+<script>
+const textArea=document.getElementById('text'),status=document.getElementById('status');
+// 既存の母音見本を保ち、基本かな・濁点・半濁点・小書きかな・拗音の入力ボタンを生成
+const mouthTemplates=new Map([...document.querySelectorAll('#vowels .vowel')].map(b=>[b.dataset.char,b.querySelector('svg').cloneNode(true)]));
+const vowelMap={
+'あ':'あ','か':'あ','さ':'あ','た':'あ','な':'あ','は':'あ','ま':'あ','や':'あ','ら':'あ','わ':'あ','が':'あ','ざ':'あ','だ':'あ','ば':'あ','ぱ':'あ',
+'い':'い','き':'い','し':'い','ち':'い','に':'い','ひ':'い','み':'い','り':'い','ぎ':'い','じ':'い','ぢ':'い','び':'い','ぴ':'い',
+'う':'う','く':'う','す':'う','つ':'う','ぬ':'う','ふ':'う','む':'う','ゆ':'う','る':'う','ぐ':'う','ず':'う','づ':'う','ぶ':'う','ぷ':'う',
+'え':'え','け':'え','せ':'え','て':'え','ね':'え','へ':'え','め':'え','れ':'え','げ':'え','ぜ':'え','で':'え','べ':'え','ぺ':'え',
+'お':'お','こ':'お','そ':'お','と':'お','の':'お','ほ':'お','も':'お','よ':'お','ろ':'お','を':'お','ご':'お','ぞ':'お','ど':'お','ぼ':'お','ぽ':'お','ん':'ん',
+'ぁ':'あ','ゃ':'あ','ゎ':'あ','ぃ':'い','ぅ':'う','ゅ':'う','ぇ':'え','ぉ':'お','ょ':'お','っ':'う'
+};
+const groups=[
+['基本の五十音','あ い う え お か き く け こ さ し す せ そ た ち つ て と な に ぬ ね の は ひ ふ へ ほ ま み む め も や ゆ よ ら り る れ ろ わ を ん'],
+['濁点','が ぎ ぐ げ ご ざ じ ず ぜ ぞ だ ぢ づ で ど ば び ぶ べ ぼ'],
+['半濁点','ぱ ぴ ぷ ぺ ぽ'],
+['小さいかな・長音・句読点','ぁ ぃ ぅ ぇ ぉ ゃ ゅ ょ っ ゎ ー 、 。 ？ ！'],
+['拗音','きゃ きゅ きょ しゃ しゅ しょ ちゃ ちゅ ちょ にゃ にゅ にょ ひゃ ひゅ ひょ みゃ みゅ みょ りゃ りゅ りょ'],
+['濁音の拗音','ぎゃ ぎゅ ぎょ じゃ じゅ じょ ぢゃ ぢゅ ぢょ びゃ びゅ びょ'],
+['半濁音の拗音','ぴゃ ぴゅ ぴょ'],
+['外来音の組み合わせ','ふぁ ふぃ ふぇ ふぉ てぃ とぅ でぃ どぅ うぃ うぇ うぉ']
+]
+const kanaGrid=document.getElementById('vowels');kanaGrid.replaceChildren();
+kanaGrid.style.display='grid';kanaGrid.style.gridTemplateColumns='repeat(auto-fit,minmax(70px,1fr))';
+const buttonMap=new Map();
+function addKanaButton(ch, parent){
+ const btn=document.createElement('button');btn.className='vowel';btn.dataset.char=ch;btn.setAttribute('aria-pressed','false');btn.setAttribute('aria-label',ch+'を入力');
+ const base=[...ch].reverse().find(c=>vowelMap[c]);
+ if(base){const svg=(mouthTemplates.get(vowelMap[base])||mouthTemplates.get('ん')).cloneNode(true);svg.setAttribute('aria-hidden','true');btn.appendChild(svg)}
+ const label=document.createElement('div');label.className='kana';label.textContent=ch;btn.appendChild(label);
+ btn.addEventListener('click',()=>{textArea.setRangeText(ch,textArea.selectionStart,textArea.selectionEnd,'end');textArea.focus();document.querySelectorAll('.vowel').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));status.textContent='「'+ch+'」を追加しました'});
+ parent.appendChild(btn);buttonMap.set(ch,btn);
+}
+for(const [heading,chars] of groups){
+ const section=document.createElement('div');section.style.cssText='grid-column:1/-1;margin-top:8px';
+ const title=document.createElement('h3');title.textContent=heading;title.style.cssText='font-size:.95rem;margin:4px 0 8px';section.appendChild(title);
+ const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:7px';
+ const tokens=chars.trim().split(/\s+/);for(const token of tokens){addKanaButton(token,grid)}
+ section.appendChild(grid);kanaGrid.appendChild(section);
+}
+// CSSの外側グリッドが崩れないよう、各分類を全幅で配置
+document.getElementById('space').onclick=()=>{const a=textArea.selectionStart,b=textArea.selectionEnd;textArea.setRangeText(' ',a,b,'end');textArea.focus()};
+document.getElementById('back').onclick=()=>{const a=textArea.selectionStart,b=textArea.selectionEnd;if(a!==b){textArea.setRangeText('',a,b,'end')}else if(a>0){let cut=a-1;const before=textArea.value.slice(0,a);if(typeof Intl.Segmenter==='function'){const seg=[...new Intl.Segmenter('ja',{granularity:'grapheme'}).segment(before)];if(seg.length)cut=seg[seg.length-1].index}else if(a>1&&/[\uDC00-\uDFFF]/.test(before.slice(-1)))cut=a-2;textArea.setRangeText('',cut,a,'end')}textArea.focus()};
+document.getElementById('clear').onclick=()=>{textArea.value='';status.textContent='文章を消去しました';textArea.focus()};
+document.getElementById('speak').onclick=()=>{
+ if(!textArea.value.trim()){status.textContent='読み上げるテキストを入力してください';return}
+ if(!('speechSynthesis' in window)){status.textContent='このブラウザは読み上げに対応していません';return}
+ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(textArea.value);u.lang='ja-JP';speechSynthesis.speak(u);status.textContent='テキストを読み上げています';
+};
+let flipFrames=[];let flipIndex=0;let flipTimer=null;
+function stopFlip(){if(flipTimer!==null){clearInterval(flipTimer);flipTimer=null}document.getElementById('playFlip').textContent='▶ 再生'}
+function showFlipFrame(){
+ const stage=document.getElementById('flipStage');stage.replaceChildren();
+ if(!flipFrames.length){stage.textContent='再生するコマがありません';document.getElementById('flipMeta').textContent='0 / 0 コマ';return}
+ const frame=flipFrames[flipIndex];
+ if(frame.svg){stage.appendChild(frame.svg.cloneNode(true));const label=document.createElement('div');label.id='flipChar';label.textContent=frame.ch;stage.appendChild(label)}
+ else {const label=document.createElement('div');label.id='flipChar';label.style.cssText='min-height:150px;display:flex;align-items:center;justify-content:center;font-size:4rem';label.textContent=frame.ch===' '?'␠':frame.ch;stage.appendChild(label);const hint=document.createElement('div');hint.className='note';hint.textContent=frame.ch===' '?'空白':'口形画像なし（文字カード）';stage.appendChild(hint)}
+ document.getElementById('flipMeta').textContent=(flipIndex+1)+' / '+flipFrames.length+' コマ　「'+(frame.ch===' '?'空白':frame.ch)+'」';
+ document.getElementById('flipRange').value=String(flipIndex);
+}
+function stepFlip(delta){if(!flipFrames.length)return;flipIndex=(flipIndex+delta+flipFrames.length)%flipFrames.length;showFlipFrame()}
+document.getElementById('arrange').onclick=()=>{
+ stopFlip();const seq=document.getElementById('sequence');seq.replaceChildren();flipFrames=[];flipIndex=0;
+ const map=new Map([...document.querySelectorAll('.vowel')].map(b=>[b.dataset.char,b]));const raw=textArea.value;const digraphs=[...map.keys()].filter(k=>k.length>1).sort((a,b)=>b.length-a.length);const value=[];for(let i=0;i<raw.length;){const match=digraphs.find(k=>raw.startsWith(k,i));if(match){value.push(match);i+=match.length}else{value.push(raw[i]);i++}}
+ if(!value.length){status.textContent='先にテキストを入力してください';showFlipFrame();return}
+ value.forEach((ch,i)=>{
+   const card=document.createElement('div');card.className='flip-card';const source=map.get(ch);let svg=null;
+   if(source&&source.querySelector('svg')){svg=source.querySelector('svg').cloneNode(true);svg.style.cssText='width:100%;height:70px;display:block';card.appendChild(svg);const label=document.createElement('div');label.textContent=ch;label.style.cssText='font-size:1.2rem;font-weight:800';card.appendChild(label)}
+   else{const label=document.createElement('div');label.textContent=ch===' '?'␠':ch;label.style.cssText='height:70px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;overflow-wrap:anywhere';card.appendChild(label);const hint=document.createElement('div');hint.textContent=ch===' '?'空白':'口形画像なし';hint.style.cssText='font-size:.72rem;color:#536475';card.appendChild(hint)}
+   const number=document.createElement('div');number.textContent=String(i+1);number.style.cssText='font-size:.7rem;color:#68798a;margin-top:3px';card.appendChild(number);seq.appendChild(card);flipFrames.push({ch,svg});
+ });
+ const range=document.getElementById('flipRange');range.max=String(Math.max(0,flipFrames.length-1));range.value='0';showFlipFrame();status.textContent=value.length+'コマ分のカードを並べ、パラパラ漫画にしました';
+};
+document.getElementById('playFlip').onclick=()=>{if(!flipFrames.length){status.textContent='先にテキストを入力して「口形画像を並べる」を押してください';return}stopFlip();document.getElementById('playFlip').textContent='⏸ 再生中';flipTimer=setInterval(()=>{if(flipIndex>=flipFrames.length-1){stopFlip();return}flipIndex++;showFlipFrame()},Number(document.getElementById('flipSpeed').value))};
+document.getElementById('pauseFlip').onclick=()=>{stopFlip();status.textContent='パラパラ漫画を一時停止しました'};
+document.getElementById('prevFlip').onclick=()=>{stopFlip();stepFlip(-1)};
+document.getElementById('nextFlip').onclick=()=>{stopFlip();stepFlip(1)};
+document.getElementById('flipRange').oninput=e=>{stopFlip();flipIndex=Number(e.target.value);showFlipFrame()};
+document.getElementById('flipSpeed').onchange=()=>{if(flipTimer!==null){stopFlip();document.getElementById('playFlip').click()}};
+let stream=null;
+document.getElementById('start').onclick=async()=>{
+ try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});const v=document.getElementById('video');v.srcObject=stream;v.style.display='block';status.textContent='カメラを起動しました（自動読唇は未実装）'}
+ catch(e){status.textContent='カメラを起動できません。ブラウザの許可とHTTPS接続を確認してください。'}
+};
+document.getElementById('stop').onclick=()=>{if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;const v=document.getElementById('video');v.srcObject=null;v.style.display='none';status.textContent='カメラを停止しました'};
+</script>
+</body>
+</html>
